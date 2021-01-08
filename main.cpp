@@ -15,6 +15,9 @@
 #include "camera.h"
 #include "colors.h"
 #include "lighting.h"
+#include "objects.h"
+#include "spheres.h"
+#include "plains.h"
 
 using namespace std;
 
@@ -32,6 +35,9 @@ int main(int argc, char *argv[]) {
   
   int singlePX; //individual pixle
 
+  // origin vector
+  Vector Origin(0,0,0);
+
   //define 3 dementions
   Vector X (1,0,0);
   Vector Y (0,1,0);
@@ -41,8 +47,8 @@ int main(int argc, char *argv[]) {
   Vector camPos(3, 1.5, -4); //needs to be in positive y
   Vector look_at(0,0,0);
   Vector diff_btw(camPos.getVectX() - look_at.getVectX(),
-  				  camPos.getVectY() - look_at.getVectY(),
-  				  camPos.getVectZ() - look_at.getVectZ());
+  				        camPos.getVectY() - look_at.getVectY(),
+  				        camPos.getVectZ() - look_at.getVectZ());
 
   //camera direction
   Vector camDir = diff_btw.negative().normalize();
@@ -55,10 +61,15 @@ int main(int argc, char *argv[]) {
   Color grass_green(0.5, 1.0, 0.5, 0.3);
   Color gray(0.5, 0.5, 0.5, 0);
   Color black(0.0, 0.0, 0.0, 0);
+  Color maroon(0.5, 0.25, 0.25, 0);
 
   //light source
   Vector light_position(-7,10,-10);
   Light scene_light (light_position, white_light);
+
+  //scene objects
+  Sphere scene_sphere(Origin, 1, grass_green);
+  Plain scene_plain(Y, -1, maroon); //place plane below objects
 
 
   //loop over each px in frame
