@@ -18,6 +18,7 @@
 #include "objects.h"
 #include "spheres.h"
 #include "plains.h"
+#include "winningObjects.h"
 
 using namespace std;
 
@@ -28,12 +29,15 @@ int main(int argc, char *argv[]) {
 
   //size of frame
   int width = 640, height = 480;
+  double aspectratio = (double)width/(double)height;
 
   int dpi = 72;
   int n = width*height; //total number of pixles
   RGBType *pixels = new RGBType[n]; //define pixel array
   
   int singlePX; //individual pixle
+
+  double xAmount, yAmount; //slightly left and right of camera
 
   // origin vector
   Vector Origin(0,0,0);
@@ -68,15 +72,53 @@ int main(int argc, char *argv[]) {
   Light scene_light (light_position, white_light);
 
   //scene objects
+  vector<Object*> scene_objects; //array of objects
+  //individual objects
   Sphere scene_sphere(Origin, 1, grass_green);
   Plain scene_plain(Y, -1, maroon); //place plane below objects
-
+  //add objects to array of all objects in the scene
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere));
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_plain));
 
   //loop over each px in frame
   for (int x = 0; x < width; x++){
     for (int y = 0; y < height; y++){
-      //get individual pixel
-      singlePX = y*width + x;
+      singlePX = y*width + x; //get individual pixel
+
+      //start with no anti-aliasing
+      if (width > height){
+        // the image is wider than it is tall
+        xAmount = ((x+0.5)/width) * aspectratio - (((width-height)/(double)height)/2);
+        yAmount = ((height - y) + 0.5) / height;
+      }
+      else if (height > width){
+        //image is taller than it is wide
+        xAmount = (x +0.5)  / width;
+        yAmount = (((height -y) +0.5) /height) / aspectratio - (((height - width)/ (double)width)/2);
+      }
+      else{
+        // the image is square
+        xAmount = (x + 0.5)/width;
+        yAmount = ((height - y) + 0.5)/height;
+      }
+
+      //create camera rays
+      Vector cam_ray_origin = scene_cam.getCamPos();
+      Vector cam_ray_direction = camDir.vectAdd(camRight.vectMultiply(xAmount - 0.5).vectAdd(camDown.vectMultiply(yAmount - 0.5))).normalize();
+      Ray cam_ray(cam_ray_origin, cam_ray_direction);
+
+      //look for all ray intersections
+      vector<double> intersections; //create array of intersections
+
+      for (int index = 0; index < scene_objects.size(); index++){
+        //add intersections to array
+        intersections.push_back(scene_objects.at(index)->findIntersection(cam_ray));
+      }
+
+      //pick out intersecting objects
+      int index_of_winning_objects = winningObjectIndex(intersections);
+     
+
 
 	  //for testing
       if((x > 200 && x < 440) && (y> 200 && y < 280))  {
