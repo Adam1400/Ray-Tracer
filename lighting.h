@@ -3,18 +3,21 @@
 #include "math.h"
 #include "vectors.h"
 #include "colors.h"
+#include "source.h"
 
-class Light {
+class Light : public Source {
   Vector position = Vector(0,0,0); //default position at origin
   Color color = Color(1,1,1,0); //default color white
   
   //construct
   public:
+  Light();
+  
   Light (Vector, Color);
 
   //methods
-  Vector getLightPosition() { return position; }
-  Color getLightColor() { return color; }
+  virtual Vector getLightPosition() { return position; }
+  virtual Color getLightColor() { return color; }
 
 };
 

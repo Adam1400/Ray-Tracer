@@ -14,8 +14,9 @@ class Object {
   Object ();
 
   //methods
-  Color getObjectColor() { return Color(0,0,0,0); } //default objects 
-  double findIntersection(Ray ray) { return 0; }
+  virtual Color getColor() { return Color(0,0,0,0); } //default objects 
+  virtual Vector getNormalAt(Vector intersection_position ) { return Vector(0,0,0); }
+  virtual double findIntersection(Ray ray) { return 0; }
 
 };
 

@@ -17,10 +17,62 @@ class Color {
   double getBlue() { return blue; }
   double getSpecial() { return special; }
 
-  void setRed(double redValue) { red = redValue; }
-  void setGreen(double greenValue) { green = greenValue; }
-  void setBlue(double blueVale) { blue = blueVale; }
-  void setSpecial(double specialValue) { special = specialValue; }
+  double setRed(double redValue) { red = redValue; }
+  double setGreen(double greenValue) { green = greenValue; }
+  double setBlue(double blueVale) { blue = blueVale; }
+  double setSpecial(double specialValue) { special = specialValue; }
+
+  //for shadows
+  double brightness(){ return (red + green + blue) / 3;}
+
+  Color colorScalar(double scalar) { return 
+                                     Color(red*scalar, 
+                                          green*scalar,
+                                          blue*scalar,
+                                          special);}
+
+  Color colorAdd(Color color){ return 
+                               Color(red + color.getRed(),
+                                    green + color.getGreen(),
+                                    blue + color.getBlue(), 
+                                    special);}
+
+  Color colorMultiply(Color color){ return
+                                    Color(red * color.getRed(),
+                                         green * color.getGreen(),
+                                         blue * color.getBlue(), 
+                                         special);}
+
+  Color colorAverage (Color color) { return 
+                                     Color((red + color.getRed())/2,
+                                          (green + color.getGreen())/2,
+                                          (blue + color.getBlue())/2,
+                                           special);}
+  
+  Color trim() {
+    //trim light values so they fall within 0 - 1
+    double allLight = red + green + blue;
+    double excessLight = allLight - 3;
+    if(excessLight > 0.0){
+
+      red = red + excessLight*(red/allLight);
+      green = green + excessLight*(green/allLight);
+      blue = blue + excessLight*(blue/allLight);
+    }
+
+      if(red > 1){ red = 1; }
+      if(green > 1){ green = 1; }
+      if(blue > 1){ blue = 1; }
+
+      if(red < 0){ red = 0; }
+      if(green < 0){ green = 0; }
+      if(blue < 0){ blue = 0; }
+    
+
+    return Color(red, green, blue, special);
+
+  }
+  
   
 };
 

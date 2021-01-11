@@ -19,11 +19,11 @@ class Plain : public Object {
   //methods
   Vector getPlainNormal() { return normal; }
   double getPlainDistance() { return distance; }
-  Color getPlainColor() { return color; }
+  virtual Color getColor() { return color; }
 
-  Vector getNormalAt(Vector point) { return normal; }
+  virtual Vector getNormalAt(Vector point) { return normal; }
 
-  double findIntersection(Ray ray) { 
+  virtual double findIntersection(Ray ray) { 
       Vector ray_direction = ray.getRayDirection();
       
       double a = ray_direction.dotProduct(normal); 

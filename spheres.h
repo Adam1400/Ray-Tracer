@@ -19,14 +19,14 @@ class Sphere : public Object {
   //methods
   Vector getSphereCenter() { return center; }
   double getSphereRadius() {return radius; }
-  Color getSphereColor() { return color; }
+  virtual Color getColor() { return color; }
 
-  Vector getNormalAt(Vector point) {
+  virtual Vector getNormalAt(Vector point) {
     //normal always points away from the center of a sphere
     Vector normal_Vect = point.vectAdd(center.negative()).normalize();
     return normal_Vect;
   }
-  double findIntersection(Ray ray) {
+  virtual double findIntersection(Ray ray) {
     Vector ray_origin = ray.getRayOrigin();
     double ray_origin_x = ray_origin.getVectX();
     double ray_origin_y = ray_origin.getVectY();
