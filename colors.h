@@ -6,6 +6,7 @@ class Color {
   //default color grey
   double red = 0.5, green = 0.5, blue = 0.5, special = 0; 
   //special is reflectiveness ratio... 0 is matt 1 is chrome 
+  // 2 corrisponds to a checkerboard pattern
   
   //construct
   public:
@@ -70,8 +71,8 @@ class Color {
     
 
     return Color(red, green, blue, special);
-
   }
+  
   
   
 };
