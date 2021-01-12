@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
   //size of frame
   int width = 3840, height = 2160; //4k
-  int aadepth = 4; //antialiasing -> 1 = no AA 
+  int aadepth = 8; //antialiasing -> 1 = no AA 
 
   double aspectratio = (double)width/(double)height;
   double aathreashold = 0.1;
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
   double accuracy = 0.0000001;
 
   //progress 
-  double progress = 0, total = height*width; 
+  double progress = 0, total = height*width, current; 
 
 
   // origin vector
@@ -277,6 +277,7 @@ int main(int argc, char *argv[]) {
   //individual objects
   Sphere scene_sphere(Origin, 1, light_blue);
   Sphere scene_sphere2(Vector(-1.8,0,-1), 0.5, fire_red);
+  Sphere scene_sphere3(Vector(1.8,0,1), 0.5, grass_green);
 
 
   Plain scene_plain(Y, -1, checkerBoard); //place plane below objects
@@ -286,8 +287,12 @@ int main(int argc, char *argv[]) {
   Plain scene_plain5(X, 5, black); 
 
   //add objects to array of all objects in the scene
+  //objects
   scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere3));
+
+  //plains
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain5));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain4));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain3));
@@ -433,7 +438,20 @@ int main(int argc, char *argv[]) {
 
           //log progress
           progress = progress + 1;
-          cout << (progress/(total))*100 << "%" << endl;
+          current = (progress/total)*100;
+
+          int barWidth = 70;
+
+          std::cout << "[";
+          int pos = barWidth * (current/100);
+          for (int i = 0; i < barWidth; ++i) {
+              if (i < pos) std::cout << "=";
+              else if (i == pos) std::cout << ">";
+              else std::cout << " ";
+          }
+          std::cout << "] " << current << " %\r";
+          std::cout.flush();
+                
         }
       }
 
