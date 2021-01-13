@@ -10,6 +10,7 @@
 #include <time.h>
 
 #include "savebmp.h"
+#include "finalColor.h"
 #include "vectors.h"
 #include "rays.h"
 #include "camera.h"
@@ -19,190 +20,9 @@
 #include "spheres.h"
 #include "plains.h"
 #include "source.h"
+#include "validObject.h"
 
 using namespace std;
-
-
-int validObjectIndex(vector<double> object_intersections){
-    //return the index of valid (intersecting) objects
-
-    double max;
-    int index_of_minimum_values;
-    //prevent unnessary calculations
-    //only worried about rays that intersect in the scene 
-    if(object_intersections.size() == 0){
-        //no intersections
-        return -1;
-    }
-    else if (object_intersections.size() == 1){
-        if(object_intersections.at(0) > 0){
-            //intersection is greater than 0 its minimum index is 1
-            return 0; //index of 1 item
-        }
-        else{
-            //intersections occur elsewhere (negitive values)
-            return -1;
-        }
-    }
-    else{
-        //determine intersections closest to camera
-        //find maximum value of intersections
-        max = 0;
-        for(int i =0; i< object_intersections.size(); i++){
-            if(max < object_intersections.at(i)){
-                max = object_intersections.at(i);
-            }
-        }
-
-        //then starting from max val find minimum positive value
-        if (max > 0){
-            //only look at positive intersections
-            for (int index = 0; index < object_intersections.size(); index++){
-               if (object_intersections.at(index) > 0 && object_intersections.at(index) <= max){
-                   max = object_intersections.at(index);
-                   index_of_minimum_values = index;
-               } 
-            }
-            return index_of_minimum_values;
-        }
-        else{
-            //all intersections were negitive
-            return -1;
-        }
-    }
-}
-
-//implement shadows 
-Color getColorAt(Vector intersection_position, 
-                 Vector  intersection_ray_direction, 
-                 vector<Object*> scene_objects, 
-                 int indexOfValidObjects, 
-                 vector<Source*> light_sources,
-                 double accuracy, 
-                 double ambientlight){
-
-                   Color valid_object_color = scene_objects.at(indexOfValidObjects)->getColor();
-                   Vector valid_object_normal = scene_objects.at(indexOfValidObjects)->getNormalAt(intersection_position);
-                   Color final_color = valid_object_color.colorScalar(ambientlight);
-
-                   //overide color is SPECIAL val is 2 (checkherboard)
-                   if (valid_object_color.getSpecial() == 2){
-                     //tile pattern 
-                     int square = (int)floor(intersection_position.getVectX()) + (int)floor(intersection_position.getVectZ());
-
-                     if ((square % 2) == 0){
-                       //black tile
-                       valid_object_color.setRed(0);
-                       valid_object_color.setGreen(0);
-                       valid_object_color.setBlue(0);
-                     }
-                     else{
-                       //white tile
-                       valid_object_color.setRed(1);
-                       valid_object_color.setGreen(1);
-                       valid_object_color.setBlue(1);
-                     }
-                   }
-
-                   //apply reflections (if sp valis is between 0 and 1)
-                   if (valid_object_color.getSpecial() > 0 && valid_object_color.getSpecial() <= 1){
-                     
-                     //reflection from objects
-                     double dot1 = valid_object_normal.dotProduct(intersection_ray_direction.negative());
-                     Vector scalar1 = valid_object_normal.vectMultiply(dot1);
-                     Vector add1 = scalar1.vectAdd(intersection_ray_direction);
-                     Vector scalar2 = add1.vectMultiply(2);
-                     Vector add2 = intersection_ray_direction.negative().vectAdd(scalar2);
-                     Vector reflection_direction = add2.normalize();
-
-                     Ray reflection_ray (intersection_position, reflection_direction);
-
-                     //determine what the ray intersects with first
-                     vector<double> reflection_intersections;
-                     for (int reflection_index = 0; reflection_index < scene_objects.size(); reflection_index++){
-                       reflection_intersections.push_back(scene_objects.at(reflection_index)->findIntersection(reflection_ray));                       
-                     }
-
-                     int indexOfObjectsWithReflections = validObjectIndex(reflection_intersections);
-
-                     //ray didnt intersect with anything else 
-                     if (indexOfObjectsWithReflections != -1){
-                       if(reflection_intersections.at(indexOfObjectsWithReflections) > accuracy){
-                         //determiune position and direction of reflection
-                         //only scale color if it relfects 
-                         Vector reflection_intersection_position = intersection_position.vectAdd(reflection_direction.vectMultiply(reflection_intersections.at(indexOfObjectsWithReflections)));
-                         Vector reflection_intersection_ray_direction = reflection_direction;
-                         
-                         //recursive reflections
-                         Color reflection_intersection_color = getColorAt(reflection_intersection_position, reflection_intersection_ray_direction, scene_objects, indexOfObjectsWithReflections, light_sources, accuracy, ambientlight);
-                         
-                         //modify color based on degree of special value
-                         final_color = final_color.colorAdd(reflection_intersection_color.colorScalar(valid_object_color.getSpecial()));
-
-                       }
-                     }
-
-
-
-                   }
-
-                   for (int light_index = 0 ; light_index < light_sources.size(); light_index++){
-                      Vector light_direction = light_sources.at(light_index) ->getLightPosition().vectAdd(intersection_position.negative()).normalize();
-                     
-                      float cosine_angle = valid_object_normal.dotProduct(light_direction);
-
-                      if (cosine_angle > 0){
-                          //if angle is positive
-                          //test for shadows
-                          bool shadowed = false;
-
-                          Vector distance_to_light = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize();
-                          float distance_to_light_magnitude = distance_to_light.magnitude();
-
-                          Ray shadow_ray(intersection_position, light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize());
-                          
-                          //create ray for each light source
-                          vector<double> secondary_intersections;
-                          for (int object_index = 0; object_index< scene_objects.size() && shadowed == false; object_index++){
-                            secondary_intersections.push_back(scene_objects.at(object_index)->findIntersection(shadow_ray));
-                          }
-
-                          //if secondary intersection value exists 
-                          for (int c =0; c< secondary_intersections.size(); c++){
-                            if(secondary_intersections.at(c) > accuracy){
-                              if(secondary_intersections.at(c) <= distance_to_light_magnitude){
-                                shadowed = true;
-                              }
-                            }
-                            break;
-                          }
-
-                          //modify final color without shadow
-                          if(shadowed == false){
-                            final_color = final_color.colorAdd(valid_object_color.colorMultiply(light_sources.at(light_index)->getLightColor()).colorScalar(cosine_angle));
-                            //apply reflectivness
-                            if(valid_object_color.getSpecial() > 0 && valid_object_color.getSpecial() <= 1){
-                              //special between 0 and 1
-                              double dot1 = valid_object_normal.dotProduct(intersection_ray_direction.negative());
-                              Vector scalar1 = valid_object_normal.vectMultiply(dot1);
-                              Vector add1 = scalar1.vectAdd(intersection_ray_direction);
-                              Vector scalar2 = add1.vectMultiply(2);
-                              Vector add2 = intersection_ray_direction.negative().vectAdd(scalar2);
-                              Vector reflection_direction = add2.normalize();
-
-                              double specular = reflection_direction.dotProduct(light_direction);
-                              if(specular > 0){
-                                specular = pow(specular, 10);
-                                final_color = final_color.colorAdd(light_sources.at(light_index)->getLightColor().colorScalar(specular*valid_object_color.getSpecial()));
-
-                              }
-                            } 
-                          }
-                      }
-                   }
-                   return final_color.trim();
-                 }
-
 
 int main(int argc, char *argv[]) {
   cout << "rendering..." << endl;
@@ -210,8 +30,9 @@ int main(int argc, char *argv[]) {
   t1 = clock();
 
   //size of frame
-  int width = 3840, height = 2160; //4k
-  int aadepth = 8; //antialiasing -> 1 = no AA 
+  int width = 720, height = 480; // for quick render testing
+  //int width = 3840, height = 2160; //4k
+  int aadepth = 1; //antialiasing -> 1 = no AA 
 
   double aspectratio = (double)width/(double)height;
   double aathreashold = 0.1;
@@ -255,21 +76,40 @@ int main(int argc, char *argv[]) {
   Camera scene_cam(camPos, camDir, camRight, camDown);
 
   //define some colors
-  Color white_light(1.0, 1.0, 1.0, 0);
   Color grass_green(0.5, 1.0, 0.5, 0.3);
   Color gray(0.5, 0.5, 0.5, 0);
   Color black(0.0, 0.0, 0.0, 0);
-  Color maroon(0.5, 0.25, 0.25, 0);
+  Color maroon(0.5, 0.25, 0.25, 0.5);
   Color fire_red(1.0, 0.0, 0.0, 0.4);
   Color purpplry_green(0.7,1, 0.3, 0.5);
   Color light_blue(0.6,0.6,1,0.5);
+  Color purple(1,0,1,0.2);
+  Color yellow(1,1,0,0.6);
+
+  //light
+  Color blue_light(0.5,0.5,1,0.0);
+  Color red_light(1.0, 0.0, 0.0, 0.0);
+  Color high_noon(1,0.8392,0.67,0);
+  Color white_light(1.0, 1.0, 1.0, 0);
+
+  //special colors
   Color checkerBoard(1,1,1,2);
+  Color chrome(0,0,0,0.9999);
 
   //light source
   Vector light_position(-7,10,-10);
   Light scene_light (light_position, white_light);
+  Light scene_light2 (light_position, blue_light);
+  Light scene_light3 (Vector(7,10,-10), red_light);
+  Light scene_light4 (Vector(0,10.3,0), white_light);
+  Light scene_light5 (light_position, high_noon);
+
   vector<Source*> light_sources;
   light_sources.push_back(dynamic_cast<Source*>(&scene_light));
+  //light_sources.push_back(dynamic_cast<Source*>(&scene_light2));
+  //light_sources.push_back(dynamic_cast<Source*>(&scene_light3));
+  //light_sources.push_back(dynamic_cast<Source*>(&scene_light4));
+  //light_sources.push_back(dynamic_cast<Source*>(&scene_light5));
 
 
   //scene objects
@@ -277,12 +117,15 @@ int main(int argc, char *argv[]) {
   //individual objects
   Sphere scene_sphere(Origin, 1, light_blue);
   Sphere scene_sphere2(Vector(-1.8,0,-1), 0.5, fire_red);
-  Sphere scene_sphere3(Vector(1.8,0,1), 0.5, grass_green);
-
+  Sphere scene_sphere3(Vector(1.95,0,1), 0.5, grass_green);
+  Sphere scene_sphere4(Vector(-18,0.3,5), 3, maroon);
+  Sphere scene_sphere5(Vector(-4,3,4), 3, yellow);
+  Sphere scene_sphere6(Vector(2.3,-0.7,-0.2), 0.2, purple);
+ 
 
   Plain scene_plain(Y, -1, checkerBoard); //place plane below objects
-  Plain scene_plain2(Z, 5, black); 
-  Plain scene_plain3(X, -5, black); 
+  Plain scene_plain2(Z, 10, black); 
+  Plain scene_plain3(X, -20, black); 
   Plain scene_plain4(Z, -5, black); 
   Plain scene_plain5(X, 5, black); 
 
@@ -291,7 +134,11 @@ int main(int argc, char *argv[]) {
   scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere3));
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere4));
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere5));
+  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere6));
 
+  
   //plains
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain5));
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain4));
@@ -401,9 +248,7 @@ int main(int argc, char *argv[]) {
                                                         index_of_valid_objects,
                                                         light_sources,
                                                         accuracy,
-                                                        ambientlight);
-
-                  
+                                                        ambientlight);  
 
                   tempRed[aa_index] = intersection_color.getRed();
                   tempGreen[aa_index] = intersection_color.getGreen();
@@ -436,23 +281,21 @@ int main(int argc, char *argv[]) {
           pixels[singlePX].g = avgGreen;
           pixels[singlePX].b = avgBlue;
 
-          //log progress
-          progress = progress + 1;
-          current = (progress/total)*100;
-
-          int barWidth = 70;
-
-          std::cout << "[";
-          int pos = barWidth * (current/100);
-          for (int i = 0; i < barWidth; ++i) {
-              if (i < pos) std::cout << "=";
-              else if (i == pos) std::cout << ">";
-              else std::cout << " ";
-          }
-          std::cout << "] " << current << " %\r";
-          std::cout.flush();
-                
+          progress = progress + 1; // increment progress       
         }
+        //log progress
+        current = (progress/total)*100;
+        int barWidth = 70;
+
+        std::cout << "[";
+        int pos = barWidth * (current/100);
+        for (int i = 0; i < barWidth; ++i) {
+          if (i < pos) std::cout << "=";
+          else if (i == pos) std::cout << ">";
+          else std::cout << " ";
+        }
+        std::cout << "] " << current << "%\r";
+        std::cout.flush();
       }
 
       
