@@ -29,29 +29,32 @@ using namespace std;
 int main(int argc, char *argv[]) {
 
   //RENDER SETTINGS
-  int width = 480, height = 480; //4k
-  int aadepth = 1;                 //antialiasing -> 1 = no AA (samples per pixel)
+  int width = 3840, height = 2160; //4k
+  //int width = 720, height = 480;
+  int aadepth = 8;                 //antialiasing -> 1 = no AA (samples per pixel)
   double ambientlight = 0.2;       //amount of light
  
   //define camera position
-  Vector camPos(3, 1.5, -4); //needs to be in positive y
-  Vector look_at(0,0,0);
+  Vector camPos(2.5, 1.7, -1.0);      //needs to be in positive y
+  Vector look_at(1,2,0);
 
   //output file path and name
-  char fileName[] = "output/scene.png";
+  char fileName[] = "output/test.png";
   
 
   //OBJECTS AND LIGHT
   //define some colors
-  Color grass_green(0.5, 1.0, 0.5, 0.3);
+  Color grass_green(0.5, 1.0, 0.5, 0.5);
   Color gray(0.5, 0.5, 0.5, 0);
   Color black(0.0, 0.0, 0.0, 0);
   Color maroon(0.5, 0.25, 0.25, 0.5);
-  Color fire_red(1.0, 0.0, 0.0, 0.4);
+  Color fire_red(1.0, 0.0, 0.0, 0.0);
+  Color fire_red2(1.0, 0.0, 0.0, 0.45);
+  Color fire_red3(1.0, 0.0, 0.0, 0.9);
   Color purpplry_green(0.7,1, 0.3, 0.5);
   Color light_blue(0.6,0.6,1,0.5);
   Color purple(1,0,1,0.2);
-  Color yellow(1,1,0,0.6);
+  Color yellow(1,1,0,0.9);
 
   //light source colors
   Color blue_light(0.5,0.5,1,0.0);
@@ -93,20 +96,36 @@ int main(int argc, char *argv[]) {
   Sphere scene_sphere4(Vector(-18,0.3,5), 3, maroon);
   Sphere scene_sphere5(Vector(-4,3,4), 3, yellow);
   Sphere scene_sphere6(Vector(2.3,-0.7,-0.2), 0.2, purple);
+  Sphere stack2(Vector(0,2,0), 1, light_blue);
+  Sphere stack3(Vector(0,4,0), 1, fire_red);
+  Sphere moon(Vector(1.0,1.7,-0.6), .15, fire_red);
+  Sphere moon2(Vector(1.35,2,-0), .15, fire_red2);
+  Sphere moon3(Vector(1.625,2.3,0.6), .15, fire_red3);
+
+  
+  
+
  
   Plain scene_plain(Y, -1, checkerBoard); //place plane below objects
-  Plain scene_plain2(Z, 10, black); 
+  Plain scene_plain2(Z, 20, black); 
   Plain scene_plain3(X, -20, black); 
-  Plain scene_plain4(Z, -5, black); 
-  Plain scene_plain5(X, 5, black); 
+  Plain scene_plain4(Z, -20, black); 
+  Plain scene_plain5(X, 20, black); 
 
   //add objects to array of all objects in the scene
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere)); //objects
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere3));
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere4));
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere5));
-  scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere6));
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere)); //objects
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere3));
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere4));
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere5));
+  //scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere6));
+  scene_objects.push_back(dynamic_cast<Object*>(&stack2));
+  //scene_objects.push_back(dynamic_cast<Object*>(&stack3));
+  scene_objects.push_back(dynamic_cast<Object*>(&moon));
+  scene_objects.push_back(dynamic_cast<Object*>(&moon2));
+  scene_objects.push_back(dynamic_cast<Object*>(&moon3));
+
+
 
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain5)); //plains
   scene_objects.push_back(dynamic_cast<Object*>(&scene_plain4));

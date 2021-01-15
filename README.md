@@ -4,5 +4,6 @@ A [raytracer](https://en.wikipedia.org/wiki/Ray_tracing_(graphics)) is a photon 
 ![normal](output/normal.png)
 ![warm](output/warm.png)
 ![cold](output/cold.png)
+![stack-zoom](output/stack-zoom.png)
 
 
