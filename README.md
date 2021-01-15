@@ -3,5 +3,6 @@ A [raytracer](https://en.wikipedia.org/wiki/Ray_tracing_(graphics)) is a photon 
 
 ![normal](output/normal.png)
 ![stack-zoom](output/stack-zoom.png)
+![3moons](output/3moons.png)
 
 
